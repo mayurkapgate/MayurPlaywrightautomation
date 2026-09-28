@@ -6,3 +6,33 @@ node_modules/
 /blob-report/
 /playwright/.cache/
 /playwright/.auth/
+/reports/
+/reporting-labs/
+/allure-report/
+/allure-results/
+reporting-labs.history.json
+
+# env files (credentials)
+config/.env.*
+!config/.env.example
+
+# build
+dist/
+
+# auth
+src/data/auth.json
+
+# OS files
+.DS_Store
+Thumbs.db
+
+# IDE
+.vscode/
+.idea/
+
+# logs
+*.log
+npm-debug.log*
+
+# misc
+*.tgz

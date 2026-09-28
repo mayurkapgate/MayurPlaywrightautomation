@@ -41,7 +41,7 @@ test('mock search with fake JSON', async ({ page }) => {
 
     await page.goto('https://abc.com/index.php?route=product/search&search=macbook');
 
-    await page.pause();
+    //await page.pause();
 
 });
 
@@ -82,6 +82,6 @@ test('mock search page with fake HTML', async ({ page }) => {
     const prices = await page.locator('.price').allTextContents();
     expect(prices).toEqual(["$599", "$999"]);
 
-    await page.pause();
+    //await page.pause();
 });
 
