@@ -3,7 +3,6 @@ import { test, expect } from '../../src/fixtures/apifixtures';
 
 let tokenID: string;
 
-
 test.beforeEach('generate the token', async ({ request }) => {
     let creds = {
         username: 'admin',
