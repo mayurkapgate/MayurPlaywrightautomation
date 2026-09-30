@@ -17,6 +17,7 @@ test.skip('login page title test', async () => {
     let pageTitle = await loginPage.getLoginPageTitle();
     console.log('Login page title : ', pageTitle);
     expect(pageTitle).toBe('Account Login');
+
 });
 
 test.skip('forgot pwd link exist test', async () => {
