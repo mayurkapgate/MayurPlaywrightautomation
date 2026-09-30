@@ -25,6 +25,11 @@ export class LoginPage extends BasePage {
         await this.page.goto('opencart/index.php?route=account/login');
     }
 
+    async getLoginPageTitle() {
+        await this.page.goto('opencart/index.php?route=account/login');
+        return this.page.title();
+    }
+
     async isForgottenPwdLinkExist(): Promise<boolean> {
         return await this.forgottenPasswordLink.isVisible();
     }

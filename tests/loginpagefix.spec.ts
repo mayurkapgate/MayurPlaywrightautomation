@@ -13,7 +13,7 @@ test.beforeEach(async ({ loginPage }) => {
 
 //AAA
 test('login page title test', async ({ loginPage }) => {
-    meta({ priority: 'P2', severity: 'minor', owner: 'Naveen', story: 'US101', epic: 'ep300', feature: 'F30', issue: 'bug34' });
+    meta({ priority: 'P2', severity: 'minor', owner: 'Mayur', story: 'US101', epic: 'ep300', feature: 'F30', issue: 'bug34' });
 
     let pageTitle = await loginPage.getPageTitle();
     console.log('Login page title : ', pageTitle);
