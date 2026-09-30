@@ -26,6 +26,7 @@ export class ProductInfoPage extends BasePage {
 
     //page actions:
     async getProductHeader(): Promise<string> {
+        await this.header.waitFor({ state: 'visible' });
         return await this.header.innerText();
     }
 

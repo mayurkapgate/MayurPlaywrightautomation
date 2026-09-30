@@ -2,9 +2,9 @@
 
 
 let x = 10;
-let username = 'mayur';
+let username = 'Mayur';
 
 function login() {
-    console.log('mayur - login');
+    console.log('Mayur - login');
     console.log('Done');
 }

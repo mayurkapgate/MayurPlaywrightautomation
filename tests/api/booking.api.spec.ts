@@ -22,7 +22,7 @@ test.beforeEach('generate the token', async ({ request }) => {
 });
 
 
-test('booking CRUD with token', async ({ request, page }) => {
+test('@regression booking CRUD with token', async ({ request, page }) => {
 
     //1. create a new booking: POST -- no token needed:
     let bookingResponse = await request.post('https://restful-booker.herokuapp.com/booking', {
@@ -48,7 +48,6 @@ test('booking CRUD with token', async ({ request, page }) => {
     //web automation code:
     // page.goto('');
     // //go to the booking page
-    // //
 
 
     //2. Update a booking by bookingID: needs token

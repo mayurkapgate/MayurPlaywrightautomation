@@ -11,7 +11,7 @@ test.beforeEach(async ({ loginPage }) => {
 //data provider:
 let productData = CsvHelper.readCsv('src/testdata/product.csv');
 for (let row of productData) {
-    test(`verify search results count - ${row.searchkey} - ${row.productname}`, async ({ homePage, searchResultsPage }) => {
+    test(`@regression verify search results count - ${row.searchkey} - ${row.productname}`, async ({ homePage, searchResultsPage }) => {
         await homePage.doSearch(row.searchkey);
         let actResultCount = await searchResultsPage.getProductSearchResultsCount();
         console.log('Search Results Count: ', actResultCount);
@@ -20,28 +20,28 @@ for (let row of productData) {
 }
 
 for (let row of productData) {
-    test(`verify user is able to land on the product page - ${row.searchkey} - ${row.productname}`, async ({ homePage, searchResultsPage, page }) => {
+    test(`@smoke verify user is able to land on the product page - ${row.searchkey} - ${row.productname}`, async ({ homePage, searchResultsPage, productInfoPage }) => {
         await homePage.doSearch(row.searchkey);
         await searchResultsPage.selectProduct(row.productname);
-        expect(await page.title()).toBe(row.productname);
+        expect(await productInfoPage.getProductHeader()).toBe(row.productname);
     });
 }
 
 
 
 //common features test:
-test('App logo exists on Login Page', async ({ basePage }) => {
+test('@smoke App logo exists on Login Page', async ({ basePage }) => {
     expect(await basePage.isLogoVisible()).toBeTruthy();
 });
 
-test('Search Box exists on Login Page', async ({ basePage }) => {
+test('@smoke Search Box exists on Login Page', async ({ basePage }) => {
     expect(await basePage.isSearchBoxVisible()).toBeTruthy();
 });
 
-test('Cart exists on Login Page', async ({ basePage }) => {
+test('@smoke Cart exists on Login Page', async ({ basePage }) => {
     expect(await basePage.isCartButtonVisible()).toBeTruthy();
 });
 
-test('Footers exists on Login Page', async ({ basePage }) => {
+test('@smoke Footers exists on Login Page', async ({ basePage }) => {
     expect(await basePage.getPageFootersCount()).toBe(16);
 });

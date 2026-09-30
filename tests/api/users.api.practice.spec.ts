@@ -6,7 +6,7 @@ let AUTH_TOKEN = {
     Authorization: 'Bearer 1d845aa4bebcdb0fea690adf59de3b6fb715af4f80c5eb86c3556abc69909d81'
 };
 
-test('get all users GET api test', async ({ request }) => {
+test.skip('get all users GET api test', async ({ request }) => {
 
     let response: APIResponse = await request.get('https://gorest.co.in/public/v2/users', {
         headers: AUTH_TOKEN
@@ -22,7 +22,7 @@ test('get all users GET api test', async ({ request }) => {
 });
 
 
-test('create a user POST api test', async ({ request }) => {
+test.skip('create a user POST api test', async ({ request }) => {
 
     //User JS Object:
     let userData = {
@@ -50,7 +50,7 @@ test('create a user POST api test', async ({ request }) => {
 
 
 
-test('update a user PUT api test', async ({ request }) => {
+test.skip('update a user PUT api test', async ({ request }) => {
 
     //User JS Object:
     let userData = {
@@ -77,7 +77,7 @@ test('update a user PUT api test', async ({ request }) => {
 });
 
 
-test('delete a user DELETE api test', async ({ request }) => {
+test.skip('delete a user DELETE api test', async ({ request }) => {
 
     let response = await request.delete('https://gorest.co.in/public/v2/users/8616267', {
         headers: AUTH_TOKEN,

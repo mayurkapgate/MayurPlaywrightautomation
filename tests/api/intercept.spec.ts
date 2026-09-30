@@ -22,7 +22,7 @@ test('intercept and log requests', async ({ page }) => {
 //mocking: fake data/response:
 
 
-test('mock search with fake JSON', async ({ page }) => {
+test('@smoke mock search with fake JSON', async ({ page }) => {
 
     //JS
     let fakeProducts = [
@@ -41,12 +41,10 @@ test('mock search with fake JSON', async ({ page }) => {
 
     await page.goto('https://abc.com/index.php?route=product/search&search=macbook');
 
-    //await page.pause();
-
 });
 
 
-test('mock search page with fake HTML', async ({ page }) => {
+test('@smoke mock search page with fake HTML', async ({ page }) => {
 
     await page.route('**/index.php?route=product/search&search=macbook', async (route) => {
         await route.fulfill({
@@ -82,6 +80,5 @@ test('mock search page with fake HTML', async ({ page }) => {
     const prices = await page.locator('.price').allTextContents();
     expect(prices).toEqual(["$599", "$999"]);
 
-    //await page.pause();
 });
 
