@@ -16,6 +16,7 @@ export class HomePage extends BasePage {
         this.headers = page.getByRole('heading', { level: 2 });
         this.searchBox = page.getByRole('textbox', { name: 'Search' });
         this.searchIcon = page.locator('#search button')
+        
     }
 
     //page actions:

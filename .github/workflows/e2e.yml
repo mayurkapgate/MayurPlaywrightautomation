@@ -11,7 +11,7 @@
 #   Prod  → Build → DEV → QA → STAGE → PROD
 # ═══════════════════════════════════════════════════════════════
 
-name: Master CI/CD Pipeline
+name: e2e CI/CD Pipeline
 
 on:
   workflow_dispatch:
@@ -476,15 +476,284 @@ jobs:
           retention-days: 30
 
   # ═════════════════════════════════════════════════════
-  # PIPELINE SUMMARY (always runs — handles skipped jobs)
+  # PIPELINE NOTIFICATION — GITHUB PAGES + EMAIL + SLACK
+  #   ➜ Always runs (handles skipped jobs gracefully)
   # ═════════════════════════════════════════════════════
-  summary:
-    name: Pipeline Summary
+  notify:
+    name: Publish Reports + Notify
     needs: [build, sanity-dev, regression-qa, sanity-stage, smoke-prod]
     if: always()
     runs-on: ubuntu-latest
+    permissions:
+      pages: write
+      id-token: write
+      contents: write
     steps:
-      - name: Results
+      - name: Set Status Emoji
+        id: status
+        run: |
+          BUILD="${{ needs.build.result }}"
+          DEV="${{ needs.sanity-dev.result }}"
+          QA="${{ needs.regression-qa.result }}"
+          STAGE="${{ needs.sanity-stage.result }}"
+          PROD="${{ needs.smoke-prod.result }}"
+
+          get_emoji() { if [ "$1" = "success" ]; then echo "✅"; elif [ "$1" = "skipped" ]; then echo "⏭️"; else echo "❌"; fi; }
+
+          echo "build=$(get_emoji $BUILD)" >> $GITHUB_OUTPUT
+          echo "dev=$(get_emoji $DEV)" >> $GITHUB_OUTPUT
+          echo "qa=$(get_emoji $QA)" >> $GITHUB_OUTPUT
+          echo "stage=$(get_emoji $STAGE)" >> $GITHUB_OUTPUT
+          echo "prod=$(get_emoji $PROD)" >> $GITHUB_OUTPUT
+
+          # Check only the stages that actually ran (not skipped)
+          FAILED=false
+          for result in "$BUILD" "$DEV" "$QA" "$STAGE" "$PROD"; do
+            if [ "$result" != "success" ] && [ "$result" != "skipped" ]; then
+              FAILED=true
+            fi
+          done
+
+          if [ "$FAILED" = "true" ]; then
+            echo "overall=❌ SOME FAILURES" >> $GITHUB_OUTPUT
+          else
+            echo "overall=✅ ALL PASSED" >> $GITHUB_OUTPUT
+          fi
+
+          REPORT_BASE="https://naveenanimation20.github.io/OpenCartWebAPIAutomationFramework/runs/${{ github.run_id }}"
+          echo "report_url=${REPORT_BASE}" >> $GITHUB_OUTPUT
+
+      - name: Download All Reports
+        uses: actions/download-artifact@v4
+        with:
+          path: all-reports
+
+      - name: Organize Reports for GitHub Pages
+        run: |
+          mkdir -p pages-deploy/runs/${{ github.run_id }}
+
+          # Create index page for this run
+          cat > pages-deploy/runs/${{ github.run_id }}/index.html << 'INDEXPAGE'
+          <!DOCTYPE html>
+          <html>
+          <head>
+            <title>Pipeline Reports — Run RUN_ID</title>
+            <style>
+              body { font-family: Arial, sans-serif; margin: 0; padding: 40px; background: #f5f5f5; }
+              .container { max-width: 800px; margin: 0 auto; }
+              h1 { color: #1a1a2e; }
+              .env-tag { display: inline-block; padding: 4px 12px; border-radius: 12px; font-size: 12px; font-weight: bold; color: white; margin-left: 8px; }
+              .tag-selected { background: #007bff; }
+              .card { background: white; border-radius: 12px; padding: 24px; margin: 16px 0; box-shadow: 0 2px 8px rgba(0,0,0,0.1); }
+              .card h2 { margin-top: 0; color: #333; }
+              .card.skipped { opacity: 0.5; }
+              .card.skipped h2::after { content: " — SKIPPED"; color: #999; font-size: 14px; }
+              .links { display: flex; gap: 12px; flex-wrap: wrap; }
+              .btn { display: inline-block; padding: 10px 20px; border-radius: 8px; text-decoration: none; color: white; font-weight: bold; font-size: 14px; }
+              .html-btn { background: #1a1a2e; }
+              .allure-btn { background: #28a745; }
+              .rlabs-btn { background: #6f42c1; }
+              .meta { color: #666; font-size: 14px; margin-bottom: 24px; }
+            </style>
+          </head>
+          <body>
+            <div class="container">
+              <h1>🎭 Pipeline Reports <span class="env-tag tag-selected">ENV_SELECTED</span></h1>
+              <p class="meta">Run ID: RUN_ID | Branch: BRANCH | Date: RUN_DATE</p>
+
+              <div class="card">
+                <h2>🟢 DEV — Sanity</h2>
+                <div class="links">
+                  <a class="btn html-btn" href="dev-html/index.html">📊 HTML Report</a>
+                  <a class="btn allure-btn" href="dev-allure/index.html">📈 Allure Report</a>
+                  <a class="btn rlabs-btn" href="dev-rlabs/index.html">🧪 ReportingLabs</a>
+                </div>
+              </div>
+
+              <div class="card" id="qa-card">
+                <h2>🔵 QA — Regression</h2>
+                <div class="links">
+                  <a class="btn html-btn" href="qa-html/index.html">📊 HTML Report</a>
+                  <a class="btn allure-btn" href="qa-allure/index.html">📈 Allure Report</a>
+                  <a class="btn rlabs-btn" href="qa-rlabs/index.html">🧪 ReportingLabs</a>
+                </div>
+              </div>
+
+              <div class="card" id="stage-card">
+                <h2>🟡 STAGE — Sanity</h2>
+                <div class="links">
+                  <a class="btn html-btn" href="stage-html/index.html">📊 HTML Report</a>
+                  <a class="btn allure-btn" href="stage-allure/index.html">📈 Allure Report</a>
+                  <a class="btn rlabs-btn" href="stage-rlabs/index.html">🧪 ReportingLabs</a>
+                </div>
+              </div>
+
+              <div class="card" id="prod-card">
+                <h2>🔴 PROD — Smoke</h2>
+                <div class="links">
+                  <a class="btn html-btn" href="prod-html/index.html">📊 HTML Report</a>
+                  <a class="btn allure-btn" href="prod-allure/index.html">📈 Allure Report</a>
+                  <a class="btn rlabs-btn" href="prod-rlabs/index.html">🧪 ReportingLabs</a>
+                </div>
+              </div>
+            </div>
+          </body>
+          </html>
+          INDEXPAGE
+
+          sed -i "s|RUN_ID|${{ github.run_id }}|g" pages-deploy/runs/${{ github.run_id }}/index.html
+          sed -i "s|BRANCH|${{ github.ref_name }}|g" pages-deploy/runs/${{ github.run_id }}/index.html
+          sed -i "s|RUN_DATE|$(date +'%d %b %Y, %I:%M %p UTC')|g" pages-deploy/runs/${{ github.run_id }}/index.html
+          sed -i "s|ENV_SELECTED|${{ github.event.inputs.environment }}|g" pages-deploy/runs/${{ github.run_id }}/index.html
+
+          # Copy reports into organized folders (|| true handles skipped stages)
+          cp -r all-reports/dev-sanity-html-report/ pages-deploy/runs/${{ github.run_id }}/dev-html/ 2>/dev/null || true
+          cp -r all-reports/dev-sanity-allure-report/ pages-deploy/runs/${{ github.run_id }}/dev-allure/ 2>/dev/null || true
+          cp -r all-reports/dev-sanity-reportinglabs-report/ pages-deploy/runs/${{ github.run_id }}/dev-rlabs/ 2>/dev/null || true
+          cp -r all-reports/qa-regression-html-report/ pages-deploy/runs/${{ github.run_id }}/qa-html/ 2>/dev/null || true
+          cp -r all-reports/qa-regression-allure-report/ pages-deploy/runs/${{ github.run_id }}/qa-allure/ 2>/dev/null || true
+          cp -r all-reports/qa-regression-reportinglabs-report/ pages-deploy/runs/${{ github.run_id }}/qa-rlabs/ 2>/dev/null || true
+          cp -r all-reports/stage-sanity-html-report/ pages-deploy/runs/${{ github.run_id }}/stage-html/ 2>/dev/null || true
+          cp -r all-reports/stage-sanity-allure-report/ pages-deploy/runs/${{ github.run_id }}/stage-allure/ 2>/dev/null || true
+          cp -r all-reports/stage-sanity-reportinglabs-report/ pages-deploy/runs/${{ github.run_id }}/stage-rlabs/ 2>/dev/null || true
+          cp -r all-reports/prod-smoke-html-report/ pages-deploy/runs/${{ github.run_id }}/prod-html/ 2>/dev/null || true
+          cp -r all-reports/prod-smoke-allure-report/ pages-deploy/runs/${{ github.run_id }}/prod-allure/ 2>/dev/null || true
+          cp -r all-reports/prod-smoke-reportinglabs-report/ pages-deploy/runs/${{ github.run_id }}/prod-rlabs/ 2>/dev/null || true
+
+          echo "Reports organized ✅"
+          ls -la pages-deploy/runs/${{ github.run_id }}/
+
+      - name: Deploy to GitHub Pages
+        uses: peaceiris/actions-gh-pages@v4
+        with:
+          github_token: ${{ secrets.GITHUB_TOKEN }}
+          publish_dir: pages-deploy
+          keep_files: true
+
+      - name: Create HTML Dashboard for Email
+        run: |
+          REPORT_URL="${{ steps.status.outputs.report_url }}"
+
+          cat > dashboard.html << DASHBOARD
+          <!DOCTYPE html>
+          <html>
+          <head>
+            <style>
+              body { font-family: Arial, sans-serif; margin: 0; padding: 20px; background: #f5f5f5; }
+              .container { max-width: 700px; margin: 0 auto; background: white; border-radius: 12px; box-shadow: 0 2px 8px rgba(0,0,0,0.1); overflow: hidden; }
+              .header { background: linear-gradient(135deg, #1a1a2e, #16213e); color: white; padding: 30px; text-align: center; }
+              .header h1 { margin: 0; font-size: 24px; }
+              .header p { margin: 8px 0 0; opacity: 0.8; font-size: 14px; }
+              .status-badge { display: inline-block; padding: 6px 16px; border-radius: 20px; font-weight: bold; font-size: 14px; margin-top: 12px; }
+              .pass { background: #28a745; color: white; }
+              .fail { background: #dc3545; color: white; }
+              .body { padding: 24px; }
+              table { width: 100%; border-collapse: collapse; margin: 16px 0; }
+              th { background: #f8f9fa; text-align: left; padding: 12px 16px; font-size: 13px; color: #666; text-transform: uppercase; }
+              td { padding: 14px 16px; border-bottom: 1px solid #eee; font-size: 14px; }
+              .env-name { font-weight: 600; color: #1a1a2e; }
+              .test-type { color: #666; font-size: 13px; }
+              .status { font-size: 16px; text-align: center; }
+              .reports { background: #f8f9fa; padding: 20px 24px; border-top: 1px solid #eee; }
+              .reports h3 { margin: 0 0 12px; font-size: 16px; color: #333; }
+              .report-link { display: inline-block; padding: 10px 20px; background: #1a1a2e; color: white; text-decoration: none; border-radius: 6px; margin: 4px; font-size: 13px; }
+              .report-link.green { background: #28a745; }
+              .footer { text-align: center; padding: 16px; color: #999; font-size: 12px; border-top: 1px solid #eee; }
+              .meta { display: flex; justify-content: space-between; margin-bottom: 16px; font-size: 13px; color: #666; }
+              .env-badge { display: inline-block; padding: 4px 12px; border-radius: 12px; font-size: 12px; font-weight: bold; color: white; background: #007bff; }
+            </style>
+          </head>
+          <body>
+            <div class="container">
+              <div class="header">
+                <h1>🎭 Playwright CI/CD Dashboard</h1>
+                <p>Master Pipeline Report — Run up to: <span class="env-badge">${{ github.event.inputs.environment }}</span></p>
+              </div>
+              <div class="body">
+                <div class="meta">
+                  <span>🔀 Branch: <strong>${{ github.ref_name }}</strong></span>
+                  <span>👤 ${{ github.actor }}</span>
+                </div>
+                <table>
+                  <tr><th>Stage</th><th>Test Suite</th><th>Status</th></tr>
+                  <tr><td class="env-name">🔨 Build</td><td class="test-type">Maven Unit Tests</td><td class="status">${{ steps.status.outputs.build }}</td></tr>
+                  <tr><td class="env-name">🟢 DEV</td><td class="test-type">Sanity (@smoke)</td><td class="status">${{ steps.status.outputs.dev }}</td></tr>
+                  <tr><td class="env-name">🔵 QA</td><td class="test-type">Regression (All Tests)</td><td class="status">${{ steps.status.outputs.qa }}</td></tr>
+                  <tr><td class="env-name">🟡 STAGE</td><td class="test-type">Sanity (@smoke)</td><td class="status">${{ steps.status.outputs.stage }}</td></tr>
+                  <tr><td class="env-name">🔴 PROD</td><td class="test-type">Smoke (@smoke)</td><td class="status">${{ steps.status.outputs.prod }}</td></tr>
+                </table>
+              </div>
+              <div class="reports">
+                <h3>📊 View Reports (Click to Open)</h3>
+                <a class="report-link" href="${REPORT_URL}/index.html">📁 All Reports Dashboard</a>
+                <a class="report-link green" href="${REPORT_URL}/qa-html/index.html">📊 QA HTML Report</a>
+                <a class="report-link green" href="${REPORT_URL}/qa-allure/index.html">📈 QA Allure Report</a>
+              </div>
+              <div class="footer">
+                Naveen Automation Labs | Playwright Framework | $(date +'%d %b %Y, %I:%M %p UTC')
+              </div>
+            </div>
+          </body>
+          </html>
+          DASHBOARD
+
+      - name: Send Email with Dashboard
+        uses: dawidd6/action-send-mail@v3
+        with:
+          server_address: smtp.hostinger.com
+          server_port: 465
+          secure: true
+          username: ${{ secrets.EMAIL_USERNAME }}
+          password: ${{ secrets.EMAIL_PASSWORD }}
+          subject: "🎭 CI/CD Pipeline [${{ github.event.inputs.environment }}] — ${{ steps.status.outputs.overall }} — ${{ github.ref_name }}"
+          to: sakolitv@gmail.com
+          from: "CI Bot <${{ secrets.EMAIL_USERNAME }}>"
+          html_body: file://dashboard.html
+
+      - name: Send Slack Notification
+        if: always()
+        uses: 8398a7/action-slack@v3
+        with:
+          status: custom
+          custom_payload: |
+            {
+              "blocks": [
+                {
+                  "type": "header",
+                  "text": { "type": "plain_text", "text": "🎭 Playwright CI/CD Pipeline Report" }
+                },
+                {
+                  "type": "section",
+                  "text": { "type": "mrkdwn", "text": "*Overall: ${{ steps.status.outputs.overall }}*\n*Run up to:* `${{ github.event.inputs.environment }}`\n\n*Branch:* `${{ github.ref_name }}`  |  *Triggered by:* `${{ github.actor }}`" }
+                },
+                { "type": "divider" },
+                {
+                  "type": "section",
+                  "text": { "type": "mrkdwn", "text": "${{ steps.status.outputs.build }}  *Build* — Maven Unit Tests\n${{ steps.status.outputs.dev }}  *DEV* — Sanity (@smoke)\n${{ steps.status.outputs.qa }}  *QA* — Regression (All Tests)\n${{ steps.status.outputs.stage }}  *STAGE* — Sanity (@smoke)\n${{ steps.status.outputs.prod }}  *PROD* — Smoke (@smoke)" }
+                },
+                { "type": "divider" },
+                {
+                  "type": "actions",
+                  "elements": [
+                    {
+                      "type": "button",
+                      "text": { "type": "plain_text", "text": "📊 View Reports" },
+                      "url": "${{ steps.status.outputs.report_url }}/index.html",
+                      "style": "primary"
+                    },
+                    {
+                      "type": "button",
+                      "text": { "type": "plain_text", "text": "📁 GitHub Actions" },
+                      "url": "https://github.com/${{ github.repository }}/actions/runs/${{ github.run_id }}"
+                    }
+                  ]
+                }
+              ]
+            }
+        env:
+          SLACK_WEBHOOK_URL: ${{ secrets.SLACK_WEBHOOK_URL }}
+
+      - name: Pipeline Summary
         run: |
           echo "═══════════════════════════════════════════"
           echo "       MASTER CI/CD PIPELINE SUMMARY"
@@ -496,7 +765,8 @@ jobs:
           echo "  QA Regression:   ${{ needs.regression-qa.result }}"
           echo "  STAGE Sanity:    ${{ needs.sanity-stage.result }}"
           echo "  PROD Smoke:      ${{ needs.smoke-prod.result }}"
+          echo "  Reports:         ${{ steps.status.outputs.report_url }}/index.html"
           echo "═══════════════════════════════════════════"
           echo ""
-          echo "  ℹ️  'skipped' = not included in this run"
+          echo "  ℹ️  '⏭️ skipped' = not included in this run"
           echo "═══════════════════════════════════════════"
