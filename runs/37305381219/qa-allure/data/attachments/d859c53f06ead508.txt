@@ -1,0 +1,28 @@
+{
+  id: 8650680,
+  name: 'apiautomation',
+  email: 'apiautomation_1791201108057@open.com',
+  gender: 'male',
+  status: 'active'
+} 201
+{
+  id: 8650680,
+  name: 'apiautomation',
+  email: 'apiautomation_1791201108057@open.com',
+  gender: 'male',
+  status: 'active'
+} 200
+{
+  id: 8650680,
+  name: 'apiautomation-update',
+  email: 'apiautomation_1791201108057@open.com',
+  gender: 'male',
+  status: 'inactive'
+} 200
+{
+  id: 8650680,
+  name: 'apiautomation-update',
+  email: 'apiautomation_1791201108057@open.com',
+  gender: 'male',
+  status: 'inactive'
+} 200

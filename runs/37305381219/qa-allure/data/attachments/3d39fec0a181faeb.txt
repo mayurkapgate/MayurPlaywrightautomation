@@ -1,0 +1,72 @@
+token api response:  {
+  access_token: 'BQA41eqqzMisQVWKfwzitwgqXUeKaAolGiXVgL9WHCpsl0SFW7X9eDHKYysZexHriB1JN-InX3yxBOTZZ4KvXlk3Ky5wsHAJa2e7wXlXnUhN1uaoSs0qbPVCONTVFX6nKJpes40xJxs2',
+  token_type: 'Bearer',
+  expires_in: 3600
+}
+access token:  BQA41eqqzMisQVWKfwzitwgqXUeKaAolGiXVgL9WHCpsl0SFW7X9eDHKYysZexHriB1JN-InX3yxBOTZZ4KvXlk3Ky5wsHAJa2e7wXlXnUhN1uaoSs0qbPVCONTVFX6nKJpes40xJxs2
+{
+  album_type: 'album',
+  total_tracks: 18,
+  external_urls: { spotify: 'https://open.spotify.com/album/4aawyAB9vmqN3uQ7FjRGTy' },
+  href: 'https://api.spotify.com/v1/albums/4aawyAB9vmqN3uQ7FjRGTy',
+  id: '4aawyAB9vmqN3uQ7FjRGTy',
+  images: [
+    {
+      url: 'https://i.scdn.co/image/ab67616d0000b2732c5b24ecfa39523a75c993c4',
+      height: 640,
+      width: 640
+    },
+    {
+      url: 'https://i.scdn.co/image/ab67616d00001e022c5b24ecfa39523a75c993c4',
+      height: 300,
+      width: 300
+    },
+    {
+      url: 'https://i.scdn.co/image/ab67616d000048512c5b24ecfa39523a75c993c4',
+      height: 64,
+      width: 64
+    }
+  ],
+  name: 'Global Warming',
+  release_date: '2012-11-16',
+  release_date_precision: 'day',
+  type: 'album',
+  uri: 'spotify:album:4aawyAB9vmqN3uQ7FjRGTy',
+  artists: [
+    {
+      external_urls: [Object],
+      href: 'https://api.spotify.com/v1/artists/0TnOYISbd1XYRBk9myaseg',
+      id: '0TnOYISbd1XYRBk9myaseg',
+      name: 'Pitbull',
+      type: 'artist',
+      uri: 'spotify:artist:0TnOYISbd1XYRBk9myaseg'
+    }
+  ],
+  tracks: {
+    href: 'https://api.spotify.com/v1/albums/4aawyAB9vmqN3uQ7FjRGTy/tracks?offset=0&limit=50',
+    limit: 50,
+    next: null,
+    offset: 0,
+    previous: null,
+    total: 18,
+    items: [
+      [Object], [Object], [Object],
+      [Object], [Object], [Object],
+      [Object], [Object], [Object],
+      [Object], [Object], [Object],
+      [Object], [Object], [Object],
+      [Object], [Object], [Object]
+    ]
+  },
+  copyrights: [
+    {
+      text: '(P) 2012 RCA Records, a division of Sony Music Entertainment',
+      type: 'P'
+    }
+  ],
+  external_ids: { upc: '886443671584' },
+  genres: []
+}
+18
+https://open.spotify.com/album/4aawyAB9vmqN3uQ7FjRGTy
+3
