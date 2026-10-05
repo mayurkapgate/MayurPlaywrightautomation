@@ -1,0 +1,3 @@
+Auth API Response:  { token: '2904bcc82879283' }
+token ----> 2904bcc82879283
+Booking ID:  328
