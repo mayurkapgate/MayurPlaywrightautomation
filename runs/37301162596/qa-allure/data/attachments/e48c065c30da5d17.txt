@@ -1,0 +1,13 @@
+app user creds: mayur@gmail.com - mayur123
+search key:  macbook
+product name:  MacBook Pro
+Actual Product Details:  Map(8) {
+  'productheader' => 'MacBook Pro',
+  'productimagescount' => 4,
+  'Brand' => 'Apple',
+  'Product Code' => 'Product 18',
+  'Reward Points' => '800',
+  'Availability' => 'Out Of Stock',
+  'productprice' => '$2,000.00',
+  'extaxprice' => '$2,000.00'
+}

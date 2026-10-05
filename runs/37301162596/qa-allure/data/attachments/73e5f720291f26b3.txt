@@ -1,0 +1,3 @@
+Auth API Response:  { token: 'd95d18b9de1ad68' }
+token ----> d95d18b9de1ad68
+Booking ID:  910

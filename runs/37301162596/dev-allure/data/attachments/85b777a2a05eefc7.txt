@@ -1,0 +1,72 @@
+[
+  {
+    id: 8650525,
+    name: 'manish',
+    email: 'pwautomation_1791198652120@open.com',
+    gender: 'male',
+    status: 'active'
+  },
+  {
+    id: 8649609,
+    name: 'Anala Gupta III',
+    email: 'anala_iii_gupta@lueilwitz-collins.test',
+    gender: 'female',
+    status: 'active'
+  },
+  {
+    id: 8649608,
+    name: 'Bhadran Khatri',
+    email: 'bhadran_khatri@raynor-roob.example',
+    gender: 'male',
+    status: 'inactive'
+  },
+  {
+    id: 8649607,
+    name: 'Bala Gill',
+    email: 'bala_gill@fadel-reichel.test',
+    gender: 'male',
+    status: 'inactive'
+  },
+  {
+    id: 8649606,
+    name: 'Damodara Abbott',
+    email: 'abbott_damodara@kirlin.test',
+    gender: 'female',
+    status: 'active'
+  },
+  {
+    id: 8649605,
+    name: 'Fr. Dakshayani Varman',
+    email: 'varman_fr_dakshayani@bins.test',
+    gender: 'male',
+    status: 'active'
+  },
+  {
+    id: 8649604,
+    name: 'Deependra Varrier',
+    email: 'deependra_varrier@johnston.example',
+    gender: 'male',
+    status: 'inactive'
+  },
+  {
+    id: 8649603,
+    name: 'Manoj Acharya',
+    email: 'manoj_acharya@reichert.test',
+    gender: 'female',
+    status: 'active'
+  },
+  {
+    id: 8649602,
+    name: 'Chakravartee Johar',
+    email: 'chakravartee_johar@rath-parisian.example',
+    gender: 'male',
+    status: 'inactive'
+  },
+  {
+    id: 8649601,
+    name: 'Sushma Menon',
+    email: 'menon_sushma@windler-shanahan.example',
+    gender: 'female',
+    status: 'inactive'
+  }
+] 200
