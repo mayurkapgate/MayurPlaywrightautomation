@@ -1,0 +1,73 @@
+# Instructions
+
+- Following Playwright test failed.
+- Explain why, be concise, respect Playwright best practices.
+- Provide a snippet of code with the fix, if possible.
+
+# Test info
+
+- Name: homepagefix.spec.ts >> @smoke logout link exist test
+- Location: tests/homepagefix.spec.ts:16:1
+
+# Error details
+
+```
+Test timeout of 30000ms exceeded while running "beforeEach" hook.
+```
+
+```
+Error: page.goto: net::ERR_ABORTED; maybe frame was detached?
+Call log:
+  - navigating to "https://naveenautomationlabs.com/opencart/index.php?route=account/login", waiting until "load"
+
+```
+
+# Test source
+
+```ts
+  1  | import { Locator, Page } from "@playwright/test";
+  2  | import { BasePage } from "./BasePage";
+  3  | 
+  4  | export class LoginPage extends BasePage {
+  5  | 
+  6  |     //1. private Locators:
+  7  |     private readonly emailId: Locator;
+  8  |     private readonly password: Locator;
+  9  |     private readonly loginBtn: Locator;
+  10 |     private readonly forgottenPasswordLink: Locator;
+  11 |     private readonly loginErrorMessage: Locator;
+  12 | 
+  13 |     //2. constructor of the page class: init the locators:
+  14 |     constructor(page: Page) {
+  15 |         super(page);
+  16 |         this.emailId = page.getByRole('textbox', { name: 'E-Mail Address' });
+  17 |         this.password = page.getByRole('textbox', { name: 'Password' });
+  18 |         this.loginBtn = page.getByRole('button', { name: 'Login' });
+  19 |         this.forgottenPasswordLink = page.getByRole('link', { name: 'Forgotten Password' }).first();
+  20 |         this.loginErrorMessage = page.locator('.alert.alert-danger.alert-dismissible');
+  21 |     }
+  22 | 
+  23 |     //3. public page actions(methods) / behaviour: Encapsulation
+  24 |     async goToLoginPage(): Promise<void> {
+> 25 |         await this.page.goto('opencart/index.php?route=account/login');
+     |                         ^ Error: page.goto: net::ERR_ABORTED; maybe frame was detached?
+  26 |     }
+  27 | 
+  28 |     async isForgottenPwdLinkExist(): Promise<boolean> {
+  29 |         return await this.forgottenPasswordLink.isVisible();
+  30 |     }
+  31 | 
+  32 |     async doLogin(username: string, password: string): Promise<void> {
+  33 |         console.log(`app user creds: ${username} - ${password}`);
+  34 |         await this.emailId.fill(username);
+  35 |         await this.password.fill(password);
+  36 |         await this.loginBtn.click();
+  37 |     }
+  38 | 
+  39 |     async isInvalidLoginErrorDisplayed(): Promise<boolean> {
+  40 |         return await this.loginErrorMessage.isVisible();
+  41 | 
+  42 |     }
+  43 | 
+  44 | }
+```
