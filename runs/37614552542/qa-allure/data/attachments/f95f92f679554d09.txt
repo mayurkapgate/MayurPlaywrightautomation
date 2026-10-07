@@ -1,0 +1,2 @@
+app user creds: mayur@gmail.com - mayur123
+home page headers:  [ 'My Account', 'My Orders', 'My Affiliate Account', 'Newsletter' ]

@@ -1,0 +1,3 @@
+Auth API Response:  { token: 'b26bf9091c1c492' }
+token ----> b26bf9091c1c492
+Booking ID:  1143

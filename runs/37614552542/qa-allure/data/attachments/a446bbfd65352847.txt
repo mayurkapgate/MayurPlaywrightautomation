@@ -1,0 +1,3 @@
+app user creds: invalid@open.com - wrong123
+app user creds:  - pw1234
+app user creds: pwapril@pw.com - 
