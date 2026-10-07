@@ -24,6 +24,7 @@ export default defineConfig({
 
   reporter: process.env.CI
     ? [
+      ["blob"],
       ['list'],
       ['html', { outputFolder: "reports/html-report", open: "never" }],
       ["allure-playwright", {
@@ -34,6 +35,7 @@ export default defineConfig({
     ]
     :
     [
+      ["blob", { outputDir: "blob-report" }],
       ['list'],
       ['html', { outputFolder: "reports/html-report", open: "never" }],
       ["allure-playwright", {
@@ -45,7 +47,7 @@ export default defineConfig({
 
   use: {
     baseURL: process.env.BASE_URL,
-    headless: !process.env.CI ? false : true,
+    headless: !process.env.CI ? true : true,
     trace: 'on-first-retry',
     screenshot: 'only-on-failure',
     video: 'retain-on-failure'
