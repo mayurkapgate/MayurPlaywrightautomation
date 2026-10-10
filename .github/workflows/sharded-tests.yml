@@ -1,0 +1,276 @@
+name: Sharded Playwright Tests
+
+on:
+  workflow_dispatch:
+    inputs:
+      shards:
+        description: 'Number of shards'
+        required: true
+        default: '4'
+        type: choice
+        options:
+          - '2'
+          - '4'
+
+jobs:
+  test:
+    name: Shard ${{ matrix.shard }}/${{ inputs.shards }}
+    strategy:
+      fail-fast: false
+      matrix:
+        # as many jobs as the shards you picked (2 → [1, 2], 4 → [1, 2, 3, 4])
+        shard: ${{ fromJSON(inputs.shards == '2' && '[1, 2]' || '[1, 2, 3, 4]') }}
+    runs-on: ubuntu-latest
+    environment: QA
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+        with:
+          repository: mayurkapgate/MayurPlaywrightautomation
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: 24
+          cache: 'npm'
+
+      - name: Install dependencies
+        run: npm ci
+
+      - name: Install Playwright browsers
+        run: npx playwright install --with-deps chromium
+
+      - name: Run shard ${{ matrix.shard }}/${{ inputs.shards }}
+        run: npx playwright test --project=chromium --shard=${{ matrix.shard }}/${{ inputs.shards }}
+        env:
+          ENV: qa
+          TEST_ENV: qa                     # the "env" chip in the reportingLabs header (reporting-labs.config.ts)
+          BASE_URL: ${{ secrets.BASE_URL }}
+          USERNAME: ${{ secrets.USERNAME }}
+          PASSWORD: ${{ secrets.PASSWORD }}
+          API_BASE_URL: ${{ secrets.API_BASE_URL }}
+          API_TOKEN: ${{ secrets.API_TOKEN }}
+          OAUTH_CLIENT_ID: ${{ secrets.OAUTH_CLIENT_ID }}
+          OAUTH_CLIENT_SECRET: ${{ secrets.OAUTH_CLIENT_SECRET }}
+          GRANT_TYPE: ${{ secrets.GRANT_TYPE }}
+
+      # Per-shard HTML report
+      - name: Upload shard HTML report
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: html-report-shard-${{ matrix.shard }}
+          path: reports/html-report/
+          retention-days: 7
+
+      # Per-shard Allure results (raw JSON — for merging later)
+      - name: Upload shard Allure results
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: allure-results-shard-${{ matrix.shard }}
+          path: allure-results/
+          retention-days: 7
+
+      # Blob report (for PW HTML merge)
+      - name: Upload blob report
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: blob-report-shard-${{ matrix.shard }}
+          path: blob-report/
+          retention-days: 1
+
+      # Per-shard reportingLabs report (index.html + report.pdf + report.json — the JSON is what the merge reads)
+      - name: Upload shard reportingLabs report
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: reporting-labs-shard-${{ matrix.shard }}
+          path: reporting-labs/
+          retention-days: 7
+
+  merge-reports:
+    name: Merge All Reports
+    needs: test
+    if: always()
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+        with:
+          repository: mayurkapgate/MayurPlaywrightautomation
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: 24
+          cache: 'npm'
+
+      - name: Install dependencies
+        run: npm ci
+
+      # ─── MERGE PW HTML REPORT ──────────────────────────
+      - name: Download all blob reports
+        uses: actions/download-artifact@v4
+        with:
+          path: all-blob-reports
+          pattern: blob-report-*
+          merge-multiple: true
+
+      - name: Merge PW HTML report
+        run: npx playwright merge-reports --reporter=html ./all-blob-reports
+
+      - name: Upload merged PW HTML report
+        uses: actions/upload-artifact@v4
+        with:
+          name: merged-pw-html-report
+          path: playwright-report/
+          retention-days: 30
+
+      # ─── MERGE ALLURE REPORT ───────────────────────────
+      - name: Install Allure
+        run: npm install -g allure-commandline
+
+      - name: Download all Allure results
+        uses: actions/download-artifact@v4
+        with:
+          path: all-allure-results
+          pattern: allure-results-shard-*
+
+      - name: Combine Allure results into single folder
+        run: |
+          mkdir -p combined-allure-results
+          for dir in all-allure-results/allure-results-shard-*/; do
+            cp -r "$dir"* combined-allure-results/ 2>/dev/null || true
+          done
+          echo "Total allure result files:"
+          ls combined-allure-results/ | wc -l
+
+      - name: Generate merged Allure report
+        run: allure generate combined-allure-results --clean -o merged-allure-report
+
+      - name: Upload merged Allure report
+        uses: actions/upload-artifact@v4
+        with:
+          name: merged-allure-report
+          path: merged-allure-report/
+          retention-days: 30
+
+      # ─── MERGE REPORTINGLABS REPORT ────────────────────
+      # if: always() so this still runs when an Allure step above fails
+      - name: Download all reportingLabs reports
+        if: always()
+        uses: actions/download-artifact@v4
+        with:
+          path: all-reporting-labs           # one subfolder per shard: all-reporting-labs/reporting-labs-shard-1/ ...
+          pattern: reporting-labs-shard-*
+
+      - name: Merge reportingLabs report
+        if: always()
+        # @latest: one Timeline row per worker of every shard (0.6.14+), whatever version package-lock.json has
+        run: npx --yes reporting-labs@latest merge ./all-reporting-labs -o merged-reporting-labs
+
+      - name: Upload merged reportingLabs report
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: merged-reporting-labs-report
+          path: merged-reporting-labs/
+          retention-days: 30
+
+  publish-reports:
+    name: Publish Reports to GitHub Pages
+    needs: merge-reports
+    if: always()
+    runs-on: ubuntu-latest
+    permissions:
+      contents: write                      # push to the gh-pages branch
+    concurrency:
+      group: gh-pages                      # one push to gh-pages at a time (e2e.yml publishes there too)
+      cancel-in-progress: false
+    env:
+      RUN_DIR: pages-deploy/runs/${{ github.run_id }}
+      REPORT_URL: https://mayurkapgate.github.io/MayurPlaywrightautomation//runs/${{ github.run_id }}
+    steps:
+      - name: Download merged reports
+        uses: actions/download-artifact@v4
+        with:
+          path: merged-reports             # merged-reports/merged-pw-html-report/, merged-allure-report/, merged-reporting-labs-report/
+          pattern: merged-*
+
+      - name: Organize reports
+        run: |
+          mkdir -p "$RUN_DIR"
+          # || true: a report whose merge failed is simply left out
+          cp -r merged-reports/merged-pw-html-report/        "$RUN_DIR/html/"  2>/dev/null || true
+          cp -r merged-reports/merged-allure-report/         "$RUN_DIR/allure/" 2>/dev/null || true
+          cp -r merged-reports/merged-reporting-labs-report/ "$RUN_DIR/rlabs/"  2>/dev/null || true
+
+          # Result line for the landing page, from the merged reportingLabs report.json
+          SUMMARY="No reportingLabs result"
+          if [ -f "$RUN_DIR/rlabs/report.json" ]; then
+            SUMMARY=$(jq -r '[.tests[].outcome] as $o
+              | "\($o | length) tests · \([$o[] | select(. == "passed")] | length) passed · \([$o[] | select(. == "failed")] | length) failed · \([$o[] | select(. == "flaky")] | length) flaky · \([$o[] | select(. == "skipped")] | length) skipped"' \
+              "$RUN_DIR/rlabs/report.json")
+          fi
+
+          cat > "$RUN_DIR/index.html" <<INDEXPAGE
+          <!DOCTYPE html>
+          <html lang="en">
+          <head>
+            <meta charset="utf-8">
+            <meta name="viewport" content="width=device-width, initial-scale=1">
+            <title>Sharded run ${{ github.run_id }}</title>
+            <style>
+              body { font-family: -apple-system, Segoe UI, Roboto, Arial, sans-serif; margin: 0; padding: 32px 16px; background: #f5f6f8; color: #1d2433; }
+              .container { max-width: 720px; margin: 0 auto; }
+              h1 { font-size: 24px; margin: 0 0 6px; }
+              .meta { color: #5b6475; font-size: 14px; margin: 0 0 24px; }
+              .card { background: #fff; border-radius: 12px; padding: 20px 24px; box-shadow: 0 1px 4px rgba(0,0,0,.08); }
+              .result { font-size: 15px; margin: 0 0 16px; }
+              .links { display: flex; flex-wrap: wrap; gap: 10px; }
+              .btn { display: inline-block; padding: 10px 18px; border-radius: 8px; color: #fff; text-decoration: none; font-weight: 600; font-size: 14px; }
+              .rlabs { background: #1d4ed8; } .html { background: #2d7d46; } .allure { background: #c2410c; }
+            </style>
+          </head>
+          <body>
+            <div class="container">
+              <h1>Sharded Playwright run</h1>
+              <p class="meta">Run ID: ${{ github.run_id }} · ${{ inputs.shards }} shards · Branch: ${{ github.ref_name }} · $(date +'%d %b %Y, %I:%M %p UTC')</p>
+              <div class="card">
+                <p class="result">${SUMMARY}</p>
+                <div class="links">
+                  <a class="btn rlabs" href="rlabs/index.html">reportingLabs</a>
+                  <a class="btn html" href="html/index.html">Playwright HTML</a>
+                  <a class="btn allure" href="allure/index.html">Allure</a>
+                </div>
+              </div>
+            </div>
+          </body>
+          </html>
+          INDEXPAGE
+
+          echo "Reports organized:"
+          ls -la "$RUN_DIR"
+
+      - name: Deploy to GitHub Pages
+        uses: peaceiris/actions-gh-pages@v4
+        with:
+          github_token: ${{ secrets.GITHUB_TOKEN }}
+          publish_dir: pages-deploy
+          keep_files: true                 # keep the earlier runs (and the e2e.yml runs) on gh-pages
+
+      - name: Report links in the run summary
+        run: |
+          {
+            echo "### Test reports"
+            echo ""
+            echo "- [All reports for this run](${REPORT_URL}/index.html)"
+            echo "- [reportingLabs](${REPORT_URL}/rlabs/index.html)"
+            echo "- [Playwright HTML](${REPORT_URL}/html/index.html)"
+            echo "- [Allure](${REPORT_URL}/allure/index.html)"
+            echo ""
+            echo "_GitHub Pages takes a minute or two to update after the deploy._"
+          } >> "$GITHUB_STEP_SUMMARY"
