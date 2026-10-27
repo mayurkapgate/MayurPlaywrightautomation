@@ -1,7 +1,7 @@
 // ═══════════════════════════════════════════════════════════════
 // Jenkinsfile — Master CI/CD Pipeline
 // Playwright TypeScript Framework
-// Naveen Automation Labs
+// Mayur
 // ═══════════════════════════════════════════════════════════════
 // Reports per stage (3 reports × 4 envs = 12 total):
 //   1. PW HTML Report    → reports-{env}/html/
@@ -453,7 +453,7 @@ pipeline {
                                     <a href="${env.BUILD_URL}console" style="display: inline-block; padding: 10px 20px; background: #6c757d; color: white; text-decoration: none; border-radius: 6px; margin: 4px;">🔍 Console Logs</a>
                                 </div>
                                 <div style="text-align: center; padding: 16px; color: #999; font-size: 12px; border-top: 1px solid #eee;">
-                                    Naveen Automation Labs | Playwright Framework
+                                    Mayur PWFramework | Playwright Framework
                                 </div>
                             </div>
                         </body>

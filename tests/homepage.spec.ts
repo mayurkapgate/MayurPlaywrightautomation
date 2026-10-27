@@ -18,7 +18,7 @@ test.skip('home page title test', async () => {
     let pageTitle = await homePage.getHomePageTitle();
     console.log('home page title: ', pageTitle);
     expect(pageTitle).toBe('My Account');
-});
+}); 
 
 test.skip('logout link exist test', async () => {
     expect(await homePage.isLogoutLinkExist()).toBeTruthy();

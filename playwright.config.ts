@@ -36,7 +36,7 @@ export default defineConfig({
     :
     [
       ["blob", { outputDir: "blob-report" }],
-      ['list'],
+      ['list'], ['json'],
       ['html', { outputFolder: "reports/html-report", open: "never" }],
       ["allure-playwright", {
         outputFolder: "allure-results",
