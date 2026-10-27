@@ -690,7 +690,7 @@ jobs:
                 <a class="report-link green" href="${REPORT_URL}/qa-allure/index.html">📈 QA Allure Report</a>
               </div>
               <div class="footer">
-                Naveen Automation Labs | Playwright Framework | $(date +'%d %b %Y, %I:%M %p UTC')
+                Mayur PWAutomation | Playwright Framework | $(date +'%d %b %Y, %I:%M %p UTC')
               </div>
             </div>
           </body>
