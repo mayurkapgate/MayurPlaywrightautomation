@@ -1,6 +1,5 @@
 # Playwright Test Sharding — Complete Guide
 
-**Naveen Automation Labs | G1 Batch**
 
 ---
 
@@ -677,8 +676,5 @@ REPORTING_LABS_OUTPUT_FOLDER=rl-shards/s1 npx playwright test --shard=1/4 --outp
 
 ---
 
-**Framework Repo:** https://github.com/naveenanimation20/OpenCartWebAPIFramework
-
 **reportingLabs:** https://reportinglabs.dev · Sharding docs: https://reportinglabs.dev/features/sharding
 
-**Naveen Automation Labs** | © 2026
